@@ -53,6 +53,15 @@ def test_main_normal_run(mock_submit, mock_bash_file):
     assert kwargs["partition"] == "compute"
     assert kwargs["dry_run"] is False
 
+@patch("swarm.main.verify_modules") # <--- NEW MOCK
+@patch("swarm.main.submit_job_array")
+def test_main_with_modules(mock_submit, mock_verify, mock_bash_file): # <--- NEW TEST
+    mock_verify.return_value = ["python"]
+    
+    result = runner.invoke(app, ["--file", str(mock_bash_file), "--modules", "python", "--dry-run"])
+    
+    assert result.exit_code == 0
+    mock_verify.assert_called_once_with("python")
 
 def test_main_missing_file():
     """Test how the CLI handles a user providing a file that doesn't exist."""
@@ -62,3 +71,4 @@ def test_main_missing_file():
     # The exit code should NOT be 0 (0 means success)
     assert result.exit_code != 0
     assert isinstance(result.exception, FileNotFoundError)
+    

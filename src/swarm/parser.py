@@ -5,8 +5,15 @@ from typing import List
 # Best Practice: Name the logger after the current module (swarm.parser)
 logger = logging.getLogger(__name__)
 
-def create_job_scripts(bash_file: Path, array_dir: Path) -> List[Path]:
+def create_job_scripts(bash_file: Path, array_dir: Path, modules: List[str] = None) -> List[Path]: # <--- UPDATED
     logger.debug(f"Starting parsing for file: {bash_file.resolve()}")
+    
+    # NEW: Format the module prefix if any modules are requested
+    module_prefix = ""
+    if modules:
+        module_prefix = f"module load {' '.join(modules)} && "
+        logger.debug(f"Module prefix to be added to each job: {module_prefix}")
+    
     
     job_scripts: List[Path] = []
     current_command: List[str] = []
@@ -33,7 +40,8 @@ def create_job_scripts(bash_file: Path, array_dir: Path) -> List[Path]:
 
             if full_command:
                 job_script = array_dir / f"job_{len(job_scripts) + 1}.sh"
-                job_script.write_text(full_command + "\n")
+                final_content = f"{module_prefix}{full_command}\n"
+                job_script.write_text(final_content)
                 job_scripts.append(job_script)
                 # Log the exact command being written
                 logger.debug(f"Created {job_script.name} with command: {full_command}")

@@ -1,6 +1,8 @@
 import logging
+from typing import List
 import typer
 from pathlib import Path
+import subprocess
 
 # Import our core logic modules
 from swarm.parser import create_job_scripts
@@ -34,6 +36,35 @@ def setup_logging(debug_mode: bool):
     logging.basicConfig(level=logging.DEBUG, handlers=handlers)
     logging.debug("--- Swarm execution started ---")
 
+# =========================================================================
+# MODULE VERIFIER
+# =========================================================================
+def verify_modules(modules_str: str) -> List[str]:
+    """
+    Safely checks if cluster modules exist by testing a load command 
+    in a background login shell. Returns a clean list of modules.
+    """
+    if not modules_str:
+        return []
+    
+    modules = [m.strip() for m in modules_str.split(",") if m.strip()]
+    
+    for mod in modules:
+        logging.debug(f"Verifying module exists: {mod}")
+        # We use a login shell (-l) so the 'module' bash function is available
+        check_cmd = f"module load {mod}"
+        result = subprocess.run(
+            ["bash", "-l", "-c", check_cmd], 
+            capture_output=True, 
+            text=True
+        )
+        
+        if result.returncode != 0:
+            typer.secho(f"Error: Could not find or load module '{mod}'.", fg=typer.colors.RED)
+            typer.secho(f"Cluster responded: {result.stderr.strip()}", fg=typer.colors.YELLOW)
+            raise typer.Exit(code=1)
+            
+    return modules
 
 # @app.callback means this runs immediately when the user types `swarm`
 @app.callback(invoke_without_command=True)
@@ -60,6 +91,9 @@ def main(
     container_image: str = typer.Option(None, "--image", help="Path or URL to the Pyxis/Enroot container image (e.g., ubuntu:latest or /path/to/image.sqsh)."),
     container_mounts: str = typer.Option(None, "--mounts", help="Comma-separated list of container mounts (e.g., /src:/dest,/src2:/dest2)."),
     
+    # OPTIONAL MODULES (Cluster-specific, verified at runtime)
+    modules: str = typer.Option(None, "--modules", "-m", help="Comma-separated list of modules to load (e.g., 'python,gcc/11.2')."),
+    
     # OPTIONAL DEV FLAGS
     dry_run: bool = typer.Option(False, "--dry-run", help="Print the planned actions without executing them."),
     debug: bool = typer.Option(False, "--debug", help="Enable detailed debug logging to the terminal.")
@@ -70,6 +104,13 @@ def main(
     # 1. Start the logging system
     setup_logging(debug)
     logger = logging.getLogger(__name__)
+    
+    # 1.5. VERIFY MODULES (New: Fail fast before we do any file operations!)
+    module_list = []
+    if modules:
+        logger.info("Verifying requested cluster modules...")
+        module_list = verify_modules(modules)
+        typer.secho(f"Verified {len(module_list)} module(s).", fg=typer.colors.GREEN)
 
     # =========================================================================
     # PATH RESOLUTION LOGIC
@@ -106,7 +147,7 @@ def main(
     
     # 4. Parse the file into separate job scripts
     logger.info("Calling parser to create individual job scripts...")
-    job_scripts = create_job_scripts(bash_file, array_dir_path)
+    job_scripts = create_job_scripts(bash_file, array_dir_path, modules=module_list)
     
     if not job_scripts:
         logger.error("Parser returned no scripts. Exiting.")

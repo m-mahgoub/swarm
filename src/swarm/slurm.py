@@ -20,6 +20,7 @@ def submit_job_array(
     memory: str,
     cwd: Path,
     rate_limit: int,
+    modules: List[str] = None,
     container_image: str = None,
     container_mounts: str = None,
     dry_run: bool = False
