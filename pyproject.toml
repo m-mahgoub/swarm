@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swarm"
+version = "0.1.0"
+description = "A modern CLI tool to wrap bash commands into a Slurm job array."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "typer>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[project.scripts]
+# This tells pip to create a terminal command called 'swarm' 
+# that points to the 'app' object in src/swarm/main.py
+swarm = "swarm.main:app"

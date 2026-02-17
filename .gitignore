@@ -1,0 +1,46 @@
+.venv/
+venv/
+env/
+
+# Python Cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs
+*.log
+
+# Development Scripts
+dev.sh
+clean.sh
+
+# Editor Configurations
+.vscode
+.devcontainer
+.editorconfig
+.prettierignore
+.prettierrc.yml
+
+# System Files
+.DS_Store
+**/._*
+
+# Checkpoints
+**/.ipynb_checkpoints
+.ipynb_checkpoints
+
+# Bash History
+**/.dir_bash_history
+.dir_bash_history
+
+# Temporary or Working Files
+*workig.py
+**/*workig.py
+
+# Egg Info
+*.egg-info/
+**/*.egg-info/
+
+# Swarm Specific
+sbatch_arrays/
