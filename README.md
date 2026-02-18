@@ -48,7 +48,7 @@ cd swarm
 # Upgrade pip
 pip install --upgrade pip
 
-# Install the tool
+# Install Swarm from the local directory
 pip install .
 
 ```
