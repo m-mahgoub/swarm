@@ -29,6 +29,10 @@ Swarm is installed using `pip`. You can do this directly from GitHub, or by down
 **Option 1: Install directly from GitHub**
 
 ```bash
+# Upgrade pip
+pip install --upgrade pip
+
+# Install Swarm directly from the GitHub repository
 pip install git+https://github.com/m-mahgoub/swarm.git
 ```
 
@@ -40,6 +44,9 @@ git clone https://github.com/m-mahgoub/swarm.git
 
 # Enter the directory
 cd swarm
+
+# Upgrade pip
+pip install --upgrade pip
 
 # Install the tool
 pip install .
