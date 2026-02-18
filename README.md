@@ -29,14 +29,14 @@ Swarm is installed using `pip`. You can do this directly from GitHub, or by down
 **Option 1: Install directly from GitHub**
 
 ```bash
-pip install git+[https://github.com/m-mahgoub/swarm.git](https://github.com/m-mahgoub/swarm.git)
+pip install git+https://github.com/m-mahgoub/swarm.git
 ```
 
 **Option 2: Download the repository and install**
 
 ```bash
 # Clone the repository to your local cluster directory
-git clone [https://github.com/m-mahgoub/swarm.git](https://github.com/m-mahgoub/swarm.git)
+git clone https://github.com/m-mahgoub/swarm.git
 
 # Enter the directory
 cd swarm
