@@ -21,10 +21,3 @@ dev = [
 # This tells pip to create a terminal command called 'swarm' 
 # that points to the 'app' object in src/swarm/main.py
 swarm = "swarm.main:app"
-
-# Explicitly map the package directory
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.packages.find]
-where = ["src"]
