@@ -1,84 +1,181 @@
-# Swarm Tool
+# Swarm
 
-## Description
-Swarm is a command-line tool designed to simplify and manage batch job submissions on SLURM clusters. It provides an easy-to-use interface for running scripts, loading modules, and utilizing containerized environments, making it ideal for high-performance computing workflows.
+## What is Swarm?
+
+Swarm is a command-line tool that takes a single text file containing multiple bash commands and automatically converts them into a Slurm job array.
+
+## What it does
+
+Instead of manually writing complex Slurm array scripts and managing task IDs, you simply provide a list of commands you want to run. Swarm automatically splits them up, builds the required orchestration script, and submits them to the cluster for you.
+
+## Supported Environments
+
+Swarm is built to interact with the following cluster components:
+
+- **Slurm Workload Manager:** For core job scheduling and array execution.
+- **Environment Modules (Optional):** Supports loading cluster-native software via `module load` before your command runs.
+- **Pyxis / Enroot (Optional):** Supports running tasks directly inside container images.
+
+## Designed For
+
+This tool is specifically designed and tested for the [Washington University RIS Scientific Compute Platform (Compute 2)](https://ris.wustl.edu/systems/scientific-compute-platform/).
+
+_(Acknowledgments: This project is inspired by the [NIH Biowulf Swarm utility](https://github.com/NIH-HPC/swarm).)_
 
 ---
 
 ## Installation
-To install Swarm, follow these steps:
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/m-mahgoub/swarm.git
-   ```
+End users can install Swarm using `pip`. You can do this directly from GitHub, or by downloading the repository.
 
-2. Navigate to the project directory:
-   ```bash
-   cd swarm
-   ```
+**Option 1: Install directly from GitHub**
 
-3. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   ```
+```bash
+pip install git+[https://github.com/m-mahgoub/swarm.git](https://github.com/m-mahgoub/swarm.git)
+```
 
-4. Install the tool:
-   ```bash
-   pip install .
-   ```
+**Option 2: Download the repository and install**
+
+```bash
+# Clone the repository to your local cluster directory
+git clone [https://github.com/m-mahgoub/swarm.git](https://github.com/m-mahgoub/swarm.git)
+
+# Enter the directory
+cd swarm
+
+# Install the tool
+pip install .
+
+```
+
+_(Note: Ensure your local `~/.local/bin` is in your system's PATH to run the command globally)._
 
 ---
 
-## Command-Line Options
-Swarm provides the following CLI options:
+## Expected Input File
 
-- `-f <file>`: Specify the script file to run.
-- `--partition <partition>`: Define the SLURM partition to use.
-- `--time <time>`: Set the maximum runtime for the job.
-- `--modules <modules>`: Load specific modules before running the script.
-- `--image <image>`: Use a container image for the job.
-- `--mounts <mounts>`: Specify directories to mount in the container.
-- `--dry-run`: Simulate the job submission without actually running it.
+Swarm expects a standard bash file (`.sh` or `.txt`).
+
+- Each new line is treated as an independent task in the job array.
+- Blank lines and comments (`#`) are ignored.
+- Multi-line commands using a backslash (`\`) are correctly parsed as a single task.
+
+**Example `commands.sh`:**
+
+```bash
+# Task 1
+echo "Running task 1 on node $(hostname)"
+
+# Task 2
+python my_script.py --input data1.csv
+
+# Task 3 (Multi-line command)
+samtools view -bS input.sam \
+  | samtools sort -o output.bam
+
+```
+
+---
+
+## Command Line Options
+
+Usage: `swarm [OPTIONS]`
+
+| Option             | Shortcut | Description                                              | Default          |
+| ------------------ | -------- | -------------------------------------------------------- | ---------------- |
+| `--file`           | `-f`     | **[Required]** Input bash file with multiple commands.   |                  |
+| `--chdir`          | `-D`     | Execution directory for the Slurm job.                   | File's directory |
+| `--array_dir`      |          | Where to save the generated array scripts.               | `sbatch_arrays`  |
+| `--partition`      | `-p`     | Partition to submit the job.                             | `general-cpu`    |
+| `--output_log`     | `-o`     | Path to the output log file.                             | `%A_%a.log`      |
+| `--error_log`      | `-e`     | Path to the error log file.                              | `%A_%a.err`      |
+| `--time`           | `-t`     | Wall-clock time for job (e.g., 24:00:00).                | `24:00:00`       |
+| `--cpus`           | `-c`     | Number of CPUs per task.                                 | `4`              |
+| `--mem`            |          | Memory requirement per task (e.g., 8G).                  | `8G`             |
+| `--sbatch_options` |          | Additional sbatch options (e.g., `--gres=gpu:1`).        |                  |
+| `--job_name`       | `-J`     | Job name for the job array.                              | `swarm_array`    |
+| `--rate_limit`     |          | Job submission rate limit (max simultaneous tasks).      |                  |
+| `--image`          |          | Path or URL to the Pyxis/Enroot container image.         |                  |
+| `--mounts`         |          | Comma-separated list of container mounts (`/src:/dest`). |                  |
+| `--modules`        | `-m`     | Comma-separated list of modules to load.                 |                  |
+| `--dry-run`        |          | Print the planned actions without executing them.        |                  |
+| `--debug`          |          | Enable detailed debug logging to the terminal.           |                  |
+| `--help`           |          | Show this message and exit.                              |                  |
 
 ---
 
 ## Usage Examples
-Here are some examples to verify that Swarm is working correctly:
 
-### Example 1: Basic Script Execution
-Run a simple test script:
+Below are examples showing how to use Swarm.
+
+### 1. Basic Usage (Minimal Command)
+
+Run a basic bash file.
+
 ```bash
-swarm -f examples/01_basic_run/simple_test.sh --partition=general-cpu --time=00:05:00
+swarm -f examples/01_basic_run/simple_test.sh
+
 ```
 
-### Example 2: Using Modules
-Run a script with the `samtools` module loaded:
+### 2. Basic Usage (Dry Run)
+
+Prints exactly what Swarm _would_ do and generates the scripts, but prevents actual submission to Slurm. Highly recommended before running large arrays.
+
 ```bash
-mkdir -p examples/02_modules_image_run
-cat << 'EOF' > examples/02_modules_image_run/test_with_modules_image.sh
-# Test 1
-samtools --help
+swarm -f examples/01_basic_run/simple_test.sh --dry-run
 
-# Test 2
-samtools --version
-EOF
+```
 
+### 3. Basic Usage (With Additional Options)
+
+Overrides default resources to request 1 CPU, 16GB of memory, a 5-minute time limit, and a maximum of 10 tasks running simultaneously.
+
+```bash
+swarm -f examples/01_basic_run/simple_test.sh -c 1 --mem 16G -t 00:05:00 --rate_limit 10
+
+```
+
+### 4. Adding Extra Slurm Options
+
+If you need to pass specific Slurm arguments that are not built into the Swarm CLI (like requesting a GPU or setting email alerts), you can pass them as a single string using `--sbatch_options`.
+
+```bash
+swarm -f examples/01_basic_run/simple_test.sh --partition=general-gpu --sbatch_options="--gres=gpu:1 --mail-type=ALL --mail-user=<YOUR_EMAIL@DOMAIN.COM>"
+
+```
+
+### 5. Using Cluster Modules
+
+If your commands require software installed on the cluster, use the `--modules` flag. Swarm verifies these modules exist _before_ submitting the job to prevent instant failures. The modules will be loaded right before your command executes.
+
+```bash
 swarm -f examples/02_modules_image_run/test_with_modules_image.sh --partition=general-cpu --time=00:05:00 --modules samtools
+
 ```
 
-### Example 3: Using a Container Image
-Run a script with a containerized environment:
+### 6. Using Container Images (Pyxis/Enroot)
+
+If your cluster supports Pyxis, you can run your tasks entirely inside a container (like a Docker image). The `--mounts` option is typically required so the container can see your local files.
+
+**Setup: Mount the current directory so the container can access your data**
+
 ```bash
 MOUNT_PATH="${PWD}"
-swarm -f examples/02_modules_image_run/test_with_modules_image.sh \
-  --partition=general-cpu \
-  --time=00:05:00 \
-  --image biocontainers/samtools:v1.9-4-deb_cv1 \
-  --mounts "${MOUNT_PATH}:${MOUNT_PATH}"
+
 ```
 
----
+**Using a DockerHub Image (Default format):**
 
-For more details, refer to the `dev.sh` file or the project documentation.
+```bash
+swarm -f examples/02_modules_image_run/test_with_modules_image.sh --partition=general-cpu --time=00:05:00 --image biocontainers/samtools:v1.9-4-deb_cv1 --mounts "${MOUNT_PATH}:${MOUNT_PATH}"
+
+```
+
+**Using an Alternative Registry (e.g., Quay.io):**
+
+**Format:** `[USER@][REGISTRY#]IMAGE[:TAG]|PATH`
+
+```bash
+swarm -f examples/02_modules_image_run/test_with_modules_image.sh --partition=general-cpu --time=00:05:00 --image quay.io#biocontainers/samtools:1.23--h96c455f_0 --mounts "${MOUNT_PATH}:${MOUNT_PATH}"
+
+```
