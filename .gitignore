@@ -1,6 +1,7 @@
 .venv/
 venv/
 env/
+ENV/
 
 # Python Cache
 __pycache__/
@@ -38,9 +39,19 @@ clean.sh
 *workig.py
 **/*workig.py
 
-# Egg Info
+# Build and Distribution Artifacts (Crucial for releasing!)
+build/
+dist/
+*.egg-info/
+*.egg
 *.egg-info/
 **/*.egg-info/
+build.sh
 
 # Swarm Specific
 sbatch_arrays/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

@@ -14,7 +14,7 @@ Swarm is built to interact with the following cluster components:
 
 - **Slurm Workload Manager:** For core job scheduling and array execution.
 - **Environment Modules (Optional):** Supports loading cluster-native software via `module load` before your command runs.
-- **Pyxis / Enroot (Optional):** Supports running tasks directly inside container images.
+- **Pyxis (Optional):** Supports running tasks directly inside container images.
 
 This tool is specifically designed and tested for the [Washington University RIS Scientific Compute Platform (Compute 2)](https://ris.wustl.edu/systems/scientific-compute-platform/).
 
@@ -100,7 +100,7 @@ Usage: `swarm [OPTIONS]`
 | `--sbatch_options` |          | Additional sbatch options (e.g., `--gres=gpu:1`).        |                  |
 | `--job_name`       | `-J`     | Job name for the job array.                              | `swarm_array`    |
 | `--rate_limit`     |          | Job submission rate limit (max simultaneous tasks).      |                  |
-| `--image`          |          | Path or URL to the Pyxis/Enroot container image.         |                  |
+| `--image`          |          | Path or URL to the Pyxis container image.                |                  |
 | `--mounts`         |          | Comma-separated list of container mounts (`/src:/dest`). |                  |
 | `--modules`        | `-m`     | Comma-separated list of modules to load.                 |                  |
 | `--dry-run`        |          | Print the planned actions without executing them.        |                  |
@@ -158,7 +158,7 @@ swarm -f examples/02_modules_image_run/test_with_modules_image.sh --partition=ge
 
 ```
 
-### 6. Using Container Images (Pyxis/Enroot)
+### 6. Using Container Images (Pyxis)
 
 If your cluster supports Pyxis, you can run your tasks entirely inside a container (like a Docker image). The `--mounts` option is typically required so the container can see your local files.
 
