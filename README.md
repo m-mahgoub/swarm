@@ -24,7 +24,7 @@ _(Acknowledgments: This project is inspired by the [NIH Biowulf Swarm utility](h
 
 ## Installation
 
-End users can install Swarm using `pip`. You can do this directly from GitHub, or by downloading the repository.
+Swarm is installed using `pip`. You can do this directly from GitHub, or by downloading the repository.
 
 **Option 1: Install directly from GitHub**
 
