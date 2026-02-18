@@ -16,8 +16,6 @@ Swarm is built to interact with the following cluster components:
 - **Environment Modules (Optional):** Supports loading cluster-native software via `module load` before your command runs.
 - **Pyxis / Enroot (Optional):** Supports running tasks directly inside container images.
 
-## Designed For
-
 This tool is specifically designed and tested for the [Washington University RIS Scientific Compute Platform (Compute 2)](https://ris.wustl.edu/systems/scientific-compute-platform/).
 
 _(Acknowledgments: This project is inspired by the [NIH Biowulf Swarm utility](https://github.com/NIH-HPC/swarm).)_
